@@ -85,6 +85,12 @@ class CocoDataset(Dataset):
             # if annotation[0, 4] == 16.0:
             #     annotation[0, 4] = 3.0
 
+            '''
+            3分类模型去掉狗
+            '''
+            if annotation[0, 4] == 16.0:
+                continue
+
             annotations = np.append(annotations, annotation, axis=0)
 
         # transform from [x, y, w, h] to [x1, y1, x2, y2]

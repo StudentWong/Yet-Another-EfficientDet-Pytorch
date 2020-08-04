@@ -105,6 +105,7 @@ def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
 
                 image_result = {
                     'image_id': image_id,
+#                    'category_id': label + 1 if label != 3 else 17,
                     'category_id': label + 1,
                     'score': float(score),
                     'bbox': box.tolist(),
@@ -123,6 +124,7 @@ def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
 
 
 def _eval(coco_gt, image_ids, pred_json_path):
+    print(pred_json_path)
     # load results in COCO evaluation tool
     coco_pred = coco_gt.loadRes(pred_json_path)
 
