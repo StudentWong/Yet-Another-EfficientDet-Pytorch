@@ -65,6 +65,8 @@ class Anchors(nn.Module):
             self.pyramid_levels = [3, 4, 5, 6, 7]
         else:
             self.pyramid_levels = pyramid_levels
+        # print(self.pyramid_levels)
+        # exit()
 
         self.strides = kwargs.get('strides', [2 ** x for x in self.pyramid_levels])
         self.scales = np.array(kwargs.get('scales', [2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)]))

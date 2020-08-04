@@ -12,10 +12,12 @@ class CocoDataset(Dataset):
 
         self.root_dir = root_dir
         self.set_name = set
+        # print(self.set_name)
         self.transform = transform
 
         self.coco = COCO(os.path.join(self.root_dir, 'annotations', 'instances_' + self.set_name + '.json'))
         self.image_ids = self.coco.getImgIds()
+        # print(self.image_ids)
 
         self.load_classes()
 
@@ -48,7 +50,9 @@ class CocoDataset(Dataset):
 
     def load_image(self, image_index):
         image_info = self.coco.loadImgs(self.image_ids[image_index])[0]
+        # print(image_info)
         path = os.path.join(self.root_dir, self.set_name, image_info['file_name'])
+        # print(path)
         img = cv2.imread(path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
@@ -65,6 +69,7 @@ class CocoDataset(Dataset):
 
         # parse annotations
         coco_annotations = self.coco.loadAnns(annotations_ids)
+        # print(coco_annotations)
         for idx, a in enumerate(coco_annotations):
 
             # some annotations have basically no width / height, skip them
@@ -74,6 +79,12 @@ class CocoDataset(Dataset):
             annotation = np.zeros((1, 5))
             annotation[0, :4] = a['bbox']
             annotation[0, 4] = a['category_id'] - 1
+            '''
+            4分类模型中狗改成3
+            '''
+            # if annotation[0, 4] == 16.0:
+            #     annotation[0, 4] = 3.0
+
             annotations = np.append(annotations, annotation, axis=0)
 
         # transform from [x, y, w, h] to [x1, y1, x2, y2]

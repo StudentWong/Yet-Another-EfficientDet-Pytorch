@@ -33,11 +33,11 @@ class Params:
 
 def get_args():
     parser = argparse.ArgumentParser('Yet Another EfficientDet Pytorch: SOTA object detection network - Zylo117')
-    parser.add_argument('-p', '--project', type=str, default='coco', help='project file that contains parameters')
+    parser.add_argument('-p', '--project', type=str, default='FLIR_ADAS_1_3', help='project file that contains parameters')
     parser.add_argument('-c', '--compound_coef', type=int, default=0, help='coefficients of efficientdet')
     parser.add_argument('-n', '--num_workers', type=int, default=12, help='num_workers of dataloader')
     parser.add_argument('--batch_size', type=int, default=12, help='The number of images per batch among all devices')
-    parser.add_argument('--head_only', type=boolean_string, default=False,
+    parser.add_argument('--head_only', type=boolean_string, default=True,
                         help='whether finetunes only the regressor and the classifier, '
                              'useful in early stage convergence or small/easy dataset')
     parser.add_argument('--lr', type=float, default=1e-4)
@@ -51,7 +51,7 @@ def get_args():
                         help='Early stopping\'s parameter: minimum change loss to qualify as an improvement')
     parser.add_argument('--es_patience', type=int, default=0,
                         help='Early stopping\'s parameter: number of epochs with no improvement after which training will be stopped. Set to 0 to disable this technique.')
-    parser.add_argument('--data_path', type=str, default='datasets/', help='the root folder of dataset')
+    parser.add_argument('--data_path', type=str, default='/home/studentw/disk3/', help='the root folder of dataset')
     parser.add_argument('--log_path', type=str, default='logs/')
     parser.add_argument('-w', '--load_weights', type=str, default=None,
                         help='whether to load weights from a checkpoint, set None to initialize, set \'last\' to load last checkpoint')
@@ -83,7 +83,8 @@ class ModelWithLoss(nn.Module):
 
 def train(opt):
     params = Params(f'projects/{opt.project}.yml')
-
+    # print(opt.project)
+    # exit()
     if params.num_gpus == 0:
         os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
@@ -114,12 +115,20 @@ def train(opt):
                                transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
                                                              Augmenter(),
                                                              Resizer(input_sizes[opt.compound_coef])]))
+
     training_generator = DataLoader(training_set, **training_params)
 
     val_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), set=params.val_set,
                           transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
                                                         Resizer(input_sizes[opt.compound_coef])]))
+    # print(len(val_set))
+    # exit()
+
     val_generator = DataLoader(val_set, **val_params)
+    # print(training_set[1058]['img'])
+    # print(training_set[1058]['annot'])
+    # print(len(params.obj_list))
+    # exit()
 
     model = EfficientDetBackbone(num_classes=len(params.obj_list), compound_coef=opt.compound_coef,
                                  ratios=eval(params.anchors_ratios), scales=eval(params.anchors_scales))
@@ -238,7 +247,7 @@ def train(opt):
                     epoch_loss.append(float(loss))
 
                     progress_bar.set_description(
-                        'Step: {}. Epoch: {}/{}. Iteration: {}/{}. Cls loss: {:.5f}. Reg loss: {:.5f}. Total loss: {:.5f}'.format(
+                        'Step: {}. Epoch: {}/{}. Iteration: {}/{}. Cls loss: {:.5f}. Reg loss: {:.5f}. Total loss: {:.5f}\n'.format(
                             step, epoch, opt.num_epochs, iter + 1, num_iter_per_epoch, cls_loss.item(),
                             reg_loss.item(), loss.item()))
                     writer.add_scalars('Loss', {'train': loss}, step)
@@ -323,4 +332,6 @@ def save_checkpoint(model, name):
 
 if __name__ == '__main__':
     opt = get_args()
+    print(opt)
+    # exit()
     train(opt)

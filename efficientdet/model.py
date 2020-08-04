@@ -365,13 +365,16 @@ class Regressor(nn.Module):
                 feat = conv(feat)
                 feat = bn(feat)
                 feat = self.swish(feat)
+            # print(feat.shape)
             feat = self.header(feat)
-
+            # print(feat.shape)
             feat = feat.permute(0, 2, 3, 1)
             feat = feat.contiguous().view(feat.shape[0], -1, 4)
-
+            # print(feat.shape)
             feats.append(feat)
-
+        # print(len(feats))
+        # print(feats[0].shape)
+        # exit()
         feats = torch.cat(feats, dim=1)
 
         return feats

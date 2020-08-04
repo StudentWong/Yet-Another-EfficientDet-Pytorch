@@ -25,9 +25,9 @@ from efficientdet.utils import BBoxTransform, ClipBoxes
 from utils.utils import preprocess, invert_affine, postprocess, boolean_string
 
 ap = argparse.ArgumentParser()
-ap.add_argument('-p', '--project', type=str, default='coco', help='project file that contains parameters')
+ap.add_argument('-p', '--project', type=str, default='FLIR_ADAS_1_3', help='project file that contains parameters')
 ap.add_argument('-c', '--compound_coef', type=int, default=0, help='coefficients of efficientdet')
-ap.add_argument('-w', '--weights', type=str, default=None, help='/path/to/weights')
+ap.add_argument('-w', '--weights', type=str, default='/home/studentw/disk3/Yet-Another-EfficientDet-Pytorch/weights/efficientdet-d0.pth', help='/path/to/weights')
 ap.add_argument('--nms_threshold', type=float, default=0.5, help='nms threshold, don\'t change it if not for testing purposes')
 ap.add_argument('--cuda', type=boolean_string, default=True)
 ap.add_argument('--device', type=int, default=0)
@@ -137,8 +137,10 @@ def _eval(coco_gt, image_ids, pred_json_path):
 
 if __name__ == '__main__':
     SET_NAME = params['val_set']
-    VAL_GT = f'datasets/{params["project_name"]}/annotations/instances_{SET_NAME}.json'
-    VAL_IMGS = f'datasets/{params["project_name"]}/{SET_NAME}/'
+    #VAL_GT = f'datasets/{params["project_name"]}/annotations/instances_{SET_NAME}.json'
+    #VAL_IMGS = f'datasets/{params["project_name"]}/{SET_NAME}/'
+    VAL_GT = f'/home/studentw/disk3/{params["project_name"]}/annotations/instances_{SET_NAME}.json'
+    VAL_IMGS = f'/home/studentw/disk3/{params["project_name"]}/{SET_NAME}/'
     MAX_IMAGES = 10000
     coco_gt = COCO(VAL_GT)
     image_ids = coco_gt.getImgIds()[:MAX_IMAGES]

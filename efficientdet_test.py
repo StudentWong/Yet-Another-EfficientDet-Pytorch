@@ -17,7 +17,7 @@ from utils.utils import preprocess, invert_affine, postprocess, STANDARD_COLORS,
 
 compound_coef = 0
 force_input_size = None  # set None to use default size
-img_path = 'test/img.png'
+img_path = "/home/studentw/disk3/FLIR_ADAS_1_3/train/thermal_8_bit/FLIR_00001.jpeg"
 
 # replace this part with your project's anchor config
 anchor_ratios = [(1.0, 1.0), (1.4, 0.7), (0.7, 1.4)]
@@ -69,7 +69,11 @@ if use_float16:
 
 with torch.no_grad():
     features, regression, classification, anchors = model(x)
-
+    # print(anchors.shape)
+    # exit()
+    # anchors_shape: (64*64*9+32*32*9+16*16*9+8*8*9+4*4*9) * 4(anchors_box)
+    # classification_shape: (64*64*9+32*32*9+16*16*9+8*8*9+4*4*9) * 90(class)
+    # regression_shape: (64*64*9+32*32*9+16*16*9+8*8*9+4*4*9) * 4(regression)
     regressBoxes = BBoxTransform()
     clipBoxes = ClipBoxes()
 
@@ -98,35 +102,43 @@ def display(preds, imgs, imshow=True, imwrite=False):
             cv2.imwrite(f'test/img_inferred_d{compound_coef}_this_repo_{i}.jpg', imgs[i])
 
 
-out = invert_affine(framed_metas, out)
-display(out, ori_imgs, imshow=False, imwrite=True)
-
-print('running speed test...')
-with torch.no_grad():
-    print('test1: model inferring and postprocessing')
-    print('inferring image for 10 times...')
-    t1 = time.time()
-    for _ in range(10):
-        _, regression, classification, anchors = model(x)
-
-        out = postprocess(x,
-                          anchors, regression, classification,
-                          regressBoxes, clipBoxes,
-                          threshold, iou_threshold)
-        out = invert_affine(framed_metas, out)
-
-    t2 = time.time()
-    tact_time = (t2 - t1) / 10
-    print(f'{tact_time} seconds, {1 / tact_time} FPS, @batch_size 1')
-
-    # uncomment this if you want a extreme fps test
-    # print('test2: model inferring only')
-    # print('inferring images for batch_size 32 for 10 times...')
-    # t1 = time.time()
-    # x = torch.cat([x] * 32, 0)
-    # for _ in range(10):
-    #     _, regression, classification, anchors = model(x)
+if __name__ == '__main__':
+    # img = cv2.imread("/home/studentw/disk3/FLIR_ADAS_1_3/train/thermal_8_bit/FLIR_00001.jpeg")
+    # print(img)
     #
-    # t2 = time.time()
-    # tact_time = (t2 - t1) / 10
-    # print(f'{tact_time} seconds, {32 / tact_time} FPS, @batch_size 32')
+    # exit()
+    # print(out)
+    # exit()
+    out = invert_affine(framed_metas, out)
+    display(out, ori_imgs, imshow=True, imwrite=False)
+    #display(out, ori_imgs, imshow=False, imwrite=True)
+
+    print('running speed test...')
+    with torch.no_grad():
+        print('test1: model inferring and postprocessing')
+        print('inferring image for 10 times...')
+        t1 = time.time()
+        for _ in range(10):
+            _, regression, classification, anchors = model(x)
+
+            out = postprocess(x,
+                              anchors, regression, classification,
+                              regressBoxes, clipBoxes,
+                              threshold, iou_threshold)
+            out = invert_affine(framed_metas, out)
+
+        t2 = time.time()
+        tact_time = (t2 - t1) / 10
+        print(f'{tact_time} seconds, {1 / tact_time} FPS, @batch_size 1')
+
+        # uncomment this if you want a extreme fps test
+        # print('test2: model inferring only')
+        # print('inferring images for batch_size 32 for 10 times...')
+        # t1 = time.time()
+        # x = torch.cat([x] * 32, 0)
+        # for _ in range(10):
+        #     _, regression, classification, anchors = model(x)
+        #
+        # t2 = time.time()
+        # tact_time = (t2 - t1) / 10
+        # print(f'{tact_time} seconds, {32 / tact_time} FPS, @batch_size 32')

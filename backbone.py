@@ -18,8 +18,10 @@ class EfficientDetBackbone(nn.Module):
         self.input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
         self.box_class_repeats = [3, 3, 3, 4, 4, 4, 5, 5, 5]
         self.pyramid_levels = [5, 5, 5, 5, 5, 5, 5, 5, 6]
+        # self.anchor_scale不同Stride级别的金字塔尺度,都是两倍两倍缩放
         self.anchor_scale = [4., 4., 4., 4., 4., 4., 4., 5., 4.]
         self.aspect_ratios = kwargs.get('ratios', [(1.0, 1.0), (1.4, 0.7), (0.7, 1.4)])
+        # 同一个金字塔尺度上再分3个小尺度3个小比例
         self.num_scales = len(kwargs.get('scales', [2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)]))
         conv_channel_coef = {
             # the channels of P3/P4/P5.
@@ -35,7 +37,9 @@ class EfficientDetBackbone(nn.Module):
         }
 
         num_anchors = len(self.aspect_ratios) * self.num_scales
-
+        # print(len(self.aspect_ratios))
+        # print(self.num_scales)
+        # exit()
         self.bifpn = nn.Sequential(
             *[BiFPN(self.fpn_num_filters[self.compound_coef],
                     conv_channel_coef[compound_coef],
@@ -68,10 +72,14 @@ class EfficientDetBackbone(nn.Module):
         max_size = inputs.shape[-1]
 
         _, p3, p4, p5 = self.backbone_net(inputs)
-
+        # print(p3.shape)
+        # print(p4.shape)
+        # print(p5.shape)
+        # exit()
         features = (p3, p4, p5)
         features = self.bifpn(features)
-
+        # print(features[0].shape)
+        # exit()
         regression = self.regressor(features)
         classification = self.classifier(features)
         anchors = self.anchors(inputs, inputs.dtype)
