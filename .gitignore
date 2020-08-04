@@ -5,7 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
-
+efficientdet-d?.pth
+val_bbox_results.json
 # Distribution / packaging
 .Python
 build/
@@ -19,6 +20,7 @@ lib64/
 parts/
 sdist/
 var/
+logs/
 wheels/
 pip-wheel-metadata/
 share/python-wheels/
