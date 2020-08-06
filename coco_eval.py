@@ -52,7 +52,7 @@ obj_list = params['obj_list']
 input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536, 1536]
 
 
-def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
+def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.07):
     results = []
 
     regressBoxes = BBoxTransform()
@@ -132,7 +132,7 @@ def _eval(coco_gt, image_ids, pred_json_path):
     print('BBox')
     coco_eval = COCOeval(coco_gt, coco_pred, 'bbox')
     coco_eval.params.imgIds = image_ids
-    coco_eval.params.catIds = [3]
+    coco_eval.params.catIds = [1]
     coco_eval.evaluate()
     coco_eval.accumulate()
     coco_eval.summarize()

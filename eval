@@ -1,0 +1,1 @@
+python ./coco_eval.py -w /home/lilium/windows_disk2/Yet-Another-EfficientDet-Pytorch/logs/efficientdet-d0_23_17712.pth
