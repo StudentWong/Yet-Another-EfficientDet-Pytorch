@@ -124,7 +124,7 @@ def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
 
 
 def _eval(coco_gt, image_ids, pred_json_path):
-    print(pred_json_path)
+    #print(pred_json_path)
     # load results in COCO evaluation tool
     coco_pred = coco_gt.loadRes(pred_json_path)
 
@@ -132,6 +132,7 @@ def _eval(coco_gt, image_ids, pred_json_path):
     print('BBox')
     coco_eval = COCOeval(coco_gt, coco_pred, 'bbox')
     coco_eval.params.imgIds = image_ids
+    coco_eval.params.catIds = [3]
     coco_eval.evaluate()
     coco_eval.accumulate()
     coco_eval.summarize()
@@ -141,8 +142,10 @@ if __name__ == '__main__':
     SET_NAME = params['val_set']
     #VAL_GT = f'datasets/{params["project_name"]}/annotations/instances_{SET_NAME}.json'
     #VAL_IMGS = f'datasets/{params["project_name"]}/{SET_NAME}/'
-    VAL_GT = f'/home/studentw/disk3/{params["project_name"]}/annotations/instances_{SET_NAME}.json'
-    VAL_IMGS = f'/home/studentw/disk3/{params["project_name"]}/{SET_NAME}/'
+    #VAL_GT = f'/home/studentw/disk3/{params["project_name"]}/annotations/instances_{SET_NAME}.json'
+    #VAL_IMGS = f'/home/studentw/disk3/{params["project_name"]}/{SET_NAME}/'
+    VAL_GT = f'/home/lilium/windows_disk2/{params["project_name"]}/annotations/instances_{SET_NAME}.json'
+    VAL_IMGS = f'/home/lilium/windows_disk2/{params["project_name"]}/{SET_NAME}/'
     MAX_IMAGES = 10000
     coco_gt = COCO(VAL_GT)
     image_ids = coco_gt.getImgIds()[:MAX_IMAGES]
