@@ -36,7 +36,7 @@ def get_args():
     parser.add_argument('-p', '--project', type=str, default='FLIR_ADAS_1_3', help='project file that contains parameters')
     parser.add_argument('-c', '--compound_coef', type=int, default=0, help='coefficients of efficientdet')
     parser.add_argument('-n', '--num_workers', type=int, default=12, help='num_workers of dataloader')
-    parser.add_argument('--batch_size', type=int, default=12, help='The number of images per batch among all devices')
+    parser.add_argument('--batch_size', type=int, default=4, help='The number of images per batch among all devices')
     parser.add_argument('--head_only', type=boolean_string, default=False,
                         help='whether finetunes only the regressor and the classifier, '
                              'useful in early stage convergence or small/easy dataset')
@@ -51,8 +51,8 @@ def get_args():
                         help='Early stopping\'s parameter: minimum change loss to qualify as an improvement')
     parser.add_argument('--es_patience', type=int, default=7,
                         help='Early stopping\'s parameter: number of epochs with no improvement after which training will be stopped. Set to 0 to disable this technique.')
-    #parser.add_argument('--data_path', type=str, default='/home/studentw/disk3/', help='the root folder of dataset')
-    parser.add_argument('--data_path', type=str, default='/home/lilium/windows_disk2/', help='the root folder of dataset')
+    parser.add_argument('--data_path', type=str, default='/home/studentw/disk3/', help='the root folder of dataset')
+    #parser.add_argument('--data_path', type=str, default='/home/lilium/windows_disk2/', help='the root folder of dataset')
     parser.add_argument('--log_path', type=str, default='logs/')
     parser.add_argument('-w', '--load_weights', type=str, default=None,
                         help='whether to load weights from a checkpoint, set None to initialize, set \'last\' to load last checkpoint')
@@ -104,6 +104,11 @@ def train(opt):
                        'drop_last': True,
                        'collate_fn': collater,
                        'num_workers': opt.num_workers}
+    # training_params = {'batch_size': opt.batch_size,
+    #                    'shuffle': False,
+    #                    'drop_last': True,
+    #                    'collate_fn': collater,
+    #                    'num_workers': opt.num_workers}
 
     val_params = {'batch_size': opt.batch_size,
                   'shuffle': False,
@@ -115,10 +120,30 @@ def train(opt):
     training_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), set=params.train_set,
                                transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
                                                              Augmenter(),
-                                                             Resizer(input_sizes[opt.compound_coef])]))
+                                                             Resizer(input_sizes[opt.compound_coef])]), )
 
     training_generator = DataLoader(training_set, **training_params)
 
+    # import cv2
+    # for iter, data in enumerate(training_generator):
+    #     if iter>0:
+    #         break
+    #     img = data["img"]
+    #     ano = data["annot"]
+    #     scale = data["scale"]
+    #     for i in range(0, img.shape[0]):
+    #         for ii in range(0, ano.shape[1]):
+    #             imgshow = img[i].permute(1, 2, 0).detach().numpy()
+    #             imgshow = cv2.rectangle(imgshow, (int(ano[i][ii][0]), int(ano[i][ii][1])),
+    #                                      (int(ano[i][ii][2]), int(ano[i][ii][3])), (0, 255, 0), thickness=4)
+    #
+    #         cv2.imshow("1", imgshow)
+    #         cv2.waitKey(0)
+    #     print(img)
+    #     print(ano)
+    #     print(scale)
+    #
+    # exit()
     val_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), set=params.val_set,
                           transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
                                                         Resizer(input_sizes[opt.compound_coef])]))

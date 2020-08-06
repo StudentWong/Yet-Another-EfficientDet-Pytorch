@@ -83,7 +83,8 @@ class FocalLoss(nn.Module):
                     classification_losses.append(cls_loss.sum())
 
                 continue
-                
+            # print(anchor.shape)
+            # print(bbox_annotation.shape)
             IoU = calc_iou(anchor[:, :], bbox_annotation[:, :4])
 
             IoU_max, IoU_argmax = torch.max(IoU, dim=1)
