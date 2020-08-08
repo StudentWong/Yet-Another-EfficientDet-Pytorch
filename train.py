@@ -40,7 +40,7 @@ def get_args():
     parser.add_argument('--head_only', type=boolean_string, default=False,
                         help='whether finetunes only the regressor and the classifier, '
                              'useful in early stage convergence or small/easy dataset')
-    parser.add_argument('--lr', type=float, default=5e-5)
+    parser.add_argument('--lr', type=float, default=5e-4)
     parser.add_argument('--optim', type=str, default='adamw', help='select optimizer for training, '
                                                                    'suggest using \'admaw\' until the'
                                                                    ' very final stage then switch to \'sgd\'')
@@ -49,7 +49,7 @@ def get_args():
     parser.add_argument('--save_interval', type=int, default=500, help='Number of steps between saving')
     parser.add_argument('--es_min_delta', type=float, default=0.0,
                         help='Early stopping\'s parameter: minimum change loss to qualify as an improvement')
-    parser.add_argument('--es_patience', type=int, default=7,
+    parser.add_argument('--es_patience', type=int, default=0,
                         help='Early stopping\'s parameter: number of epochs with no improvement after which training will be stopped. Set to 0 to disable this technique.')
     parser.add_argument('--data_path', type=str, default='/home/studentw/disk3/', help='the root folder of dataset')
     #parser.add_argument('--data_path', type=str, default='/home/lilium/windows_disk2/', help='the root folder of dataset')
@@ -60,6 +60,8 @@ def get_args():
     parser.add_argument('--debug', type=boolean_string, default=False,
                         help='whether visualize the predicted boxes of training, '
                              'the output images will be in test/')
+    parser.add_argument('--coslr', type=boolean_string, default=True,
+                        help='CosineAnnealingLR')
 
     args = parser.parse_args()
     return args
@@ -120,7 +122,7 @@ def train(opt):
     training_set = CocoDataset(root_dir=os.path.join(opt.data_path, params.project_name), set=params.train_set,
                                transform=transforms.Compose([Normalizer(mean=params.mean, std=params.std),
                                                              Augmenter(),
-                                                             Resizer(input_sizes[opt.compound_coef])]), )
+                                                             Resizer(input_sizes[opt.compound_coef])]))
 
     training_generator = DataLoader(training_set, **training_params)
 
@@ -225,7 +227,13 @@ def train(opt):
     else:
         optimizer = torch.optim.SGD(model.parameters(), opt.lr, momentum=0.9, nesterov=True)
 
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
+    if opt.coslr:
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=5, eta_min=1e-8)
+    else:
+        # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.9)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
+
+    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
 
     epoch = 0
     best_loss = 1e5
@@ -234,6 +242,14 @@ def train(opt):
     model.train()
 
     num_iter_per_epoch = len(training_generator)
+
+    #writer = SummaryWriter(log_dir='logs', flush_secs=60)
+    # if Cuda:
+    #     graph_inputs = torch.from_numpy(np.random.rand(1, 3, input_shape[0], input_shape[1])).type(
+    #         torch.FloatTensor).cuda()
+    # else:
+    #     graph_inputs = torch.from_numpy(np.random.rand(1, 3, input_shape[0], input_shape[1])).type(torch.FloatTensor)
+    # writer.add_graph(model, (graph_inputs,))
 
     try:
         for epoch in range(opt.num_epochs):
@@ -281,7 +297,8 @@ def train(opt):
                     writer.add_scalars('Classfication_loss', {'train': cls_loss}, step)
 
                     # log learning_rate
-                    current_lr = optimizer.param_groups[0]['lr']
+                    # current_lr = optimizer.param_groups[0]['lr']
+                    current_lr = scheduler.get_lr()
                     writer.add_scalar('learning_rate', current_lr, step)
 
                     step += 1
@@ -294,6 +311,7 @@ def train(opt):
                     print('[Error]', traceback.format_exc())
                     print(e)
                     continue
+            #scheduler.step(np.mean(epoch_loss))
             scheduler.step(np.mean(epoch_loss))
 
             if epoch % opt.val_interval == 0:
